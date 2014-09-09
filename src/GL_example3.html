@@ -1,0 +1,42 @@
+		
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Transforming Vertices</title>
+</head>
+
+<body> 
+	<canvas id="theCanvas" width="400" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+
+<script id="vertexShader" type="x-shader/x-vertex">
+uniform float scale;
+attribute vec4 a_Position;
+void main() 
+{
+  // adjust the x and y coordinates by the scale factor
+  float x = scale * a_Position.x;
+  float y = scale * a_Position.y;
+  gl_Position = vec4(x, y, 0.0, 1.0);
+}
+</script>
+
+<script id="fragmentShader" type="x-shader/x-fragment">
+void main() 
+{
+  gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+</script>
+
+
+		<script src="libs/webgl-utils.js"></script>
+		<script src="libs/webgl-debug.js"></script>
+		<script src="libs/cuon-utils.js"></script>
+		<script src="js/GL_example3.js"></script>
+		<script>window.onload = main</script>
+</body>
+</html>

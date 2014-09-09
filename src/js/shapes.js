@@ -11,4 +11,6 @@ shapes.n_gon = function(sides) {
         vertices.push(Math.cos(i*angle), Math.sin(i*angle));
         indices.push(0, i, i+1);
     }
+    
+    return {vertices: vertices, indices: indices};
 };

@@ -26,8 +26,22 @@ void main()
 </script>
 
 <script id="fragmentShader" type="x-shader/x-fragment">
+precision mediump float;
 void main() 
 {
+  vec2 mod_coord = mod(gl_FragCoord.xy, 20.0);
+
+  bool show_check = true;
+
+  if (mod_coord.x >= 10.0)
+    show_check = false;
+
+  if (mod_coord.y >= 10.0)
+    show_check = false;
+  
+  if (!show_check)
+    discard;
+
   gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
 </script>
@@ -36,7 +50,7 @@ void main()
 		<script src="libs/webgl-utils.js"></script>
 		<script src="libs/webgl-debug.js"></script>
 		<script src="libs/cuon-utils.js"></script>
-		<script src="GL_example1b.js"></script>
+		<script src="js/GL_example1b.js"></script>
 		<script>window.onload = main</script>
 </body>
 </html>

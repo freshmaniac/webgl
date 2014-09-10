@@ -50,7 +50,7 @@ var shader;
 // code to actually render our geometry
 function draw() {
 	var sides_input = document.getElementById('sides_input');
-	var num_sides = parseInt(sides_input.valueOf());
+	var num_sides = parseInt(sides_input.value);
 	
 	var ngon_info = shapes.n_gon(num_sides);
 	
@@ -62,8 +62,9 @@ function draw() {
 
 	// bind the buffer
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexbuffer);
-	
-	gl.bufferData(gl.ARRAY_BUFFER, ngon_info.vertices, )
+
+	// Bind the vertices to the buffer
+	gl.bufferData(gl.ARRAY_BUFFER, ngon_info.vertices, gl.STATIC_DRAW);
 
 	// get the index for the a_Position attribute defined in the vertex shader
 	var positionIndex = gl.getAttribLocation(shader, 'a_Position');
@@ -86,8 +87,11 @@ function draw() {
 	// bind the index buffer
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexbuffer);
 
+	// Add the vertex array indices to buffer
+	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ngon_info.indices, gl.STATIC_DRAW);
+
 	// draw - note use of function drawElements instead of drawArrays
-	gl.drawElements(gl.TRIANGLES, numIndices, gl.UNSIGNED_SHORT, 0);
+	gl.drawElements(gl.TRIANGLES, num_sides * 3, gl.UNSIGNED_SHORT, 0);
 
 	// unbind
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
@@ -105,10 +109,6 @@ function main() {
 
 	// retrieve <canvas> element
 	var canvas = document.getElementById('theCanvas');
-
-
-	
-	
 
 	// get the rendering context for WebGL, using the utility from the teal book
 		gl = getWebGLContext(canvas);

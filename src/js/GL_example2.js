@@ -109,6 +109,7 @@ function main() {
 	
   // retrieve <canvas> element
   var canvas = document.getElementById('theCanvas');
+  canvas.addEventListener('mousemove', showMouseCoords);
 
   // get the rendering context for WebGL, using the utility from the teal book
   gl = getWebGLContext(canvas);
@@ -185,6 +186,83 @@ function main() {
   
   // start drawing!
   animate();
-
-  
 }
+
+// Given the corner coordinates and colors of a square, as well as an (x,y) coordinate, return the interpolated color
+function color_at(corners, cornerColors, x, y) {
+	for (var i = 0; i < 4; i++)
+	{
+		if (x == corners[i][0] && y == corners[i][1])
+			return cornerColors[i];
+	}
+	
+	// Assume corners are numbered left-to-right, top-to-bottom
+	var top_left = corners[0];
+	var top_right = corners[1];
+	var bottom_left = corners[2];
+	var bottom_right = corners[3];
+	
+	// X-value for diagonal at given y
+	var center_x = Math.round(
+		interpolate(
+			bottom_left[1], top_right[1], // y-values
+			bottom_left[0], top_right[0], // x-values
+			y                             // test y
+		)
+	);
+	
+	var center_color = interpolate_colors(bottom_left[1], top_right[1], cornerColors[2], cornerColors[1], y);
+		
+	if (x == center_x) {
+		return center_color;
+	} else if (x < center_x) {
+		var left_color = interpolate_colors(bottom_left[1], top_left[1], cornerColors[2], cornerColors[0], y);
+		
+		return interpolate_colors(top_left[0], center_x, left_color, center_color, x);
+	} else {
+		var right_color = interpolate_colors(bottom_right[1], top_right[1], cornerColors[3], cornerColors[1], y);
+		
+		return interpolate_colors(center_x, top_right[0], center_color, right_color, x);
+	}
+}
+
+/**
+ * Given endpoints of two scales, (x1, x2) for scale x and (y1, y2) for scale y, and a test value x, finds the 
+ * corresponding y value.
+ */
+function interpolate(x1, x2, y1, y2, test_x) {
+	var d_y = y2 - y1;
+	var d_x = x2 - x1;
+	
+	return (d_y / d_x) * (test_x - x1) + y1;
+}
+
+function interpolate_colors(d1, d2, color1, color2, d) {
+	var new_color = [];
+	
+	for (var i = 0; i < 4; i++) {
+		new_color.push(interpolate(d1, d2, color1[i], color2[i], d));
+	}
+	
+	return new_color;
+}
+
+function getMousePos(canvas, event)
+{
+	var canvasRect = canvas.getBoundingClientRect();
+	return {
+		x: event.clientX - canvasRect.left,
+		y: event.clientX - canvasRect.top
+	};
+}
+
+function showMouseCoords(evt)
+{
+	var canvas = document.getElementById("theCanvas");
+	var coordsDiv = document.getElementById("coords");
+	
+	var mousePos = getMousePos(canvas, evt);
+	
+	coordsDiv.innerHTML = "<span>Coords: " + mousePos.x + ", " + mousePos.y + "</span>";
+}
+

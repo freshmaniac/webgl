@@ -12,11 +12,11 @@
 attribute vec4 a_Position;
 attribute vec4 a_Color;
 varying vec4 color;
-uniform float hori_shift;
+uniform float u_x_offset;
 void main() 
 {
   color = a_Color;
-  gl_Position = a_Position + vec4(hori_shift, 0.0, 0.0, 1.0);
+  gl_Position = a_Position + vec4(u_x_offset, 0.0, 0.0, 0.0);
 }
 </script>
 
@@ -33,10 +33,10 @@ void main()
 
 <script id="solidColorFragmentShader" type="x-shader/x-fragment">
 precision mediump float;
-uniform vec4 color;
+uniform vec4 u_Color;
 void main()
 {
-	gl_FragColor = color;
+	gl_FragColor = u_Color;
 }
 </script>
 

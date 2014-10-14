@@ -19,6 +19,46 @@
 //   var m = new Matrix4().setTranslate(0.3, 0.0, 0.0).rotate(90, 0, 0, 1);
 //
 
+// A very basic stack class.
+function Stack()
+{
+	this.elements = [];
+	this.t = 0;
+}
+
+Stack.prototype.push = function(m)
+{
+	this.elements[this.t++] = m;
+}
+
+Stack.prototype.top = function()
+{
+	if (this.t == 0)
+	{
+		console.log("Warning: stack underflow");
+	}
+	return this.elements[this.t - 1];
+}
+
+Stack.prototype.pop = function()
+{
+	if (this.t == 0)
+	{
+		console.log("Warning: stack underflow");
+	}
+	else
+	{
+		this.t--;
+		var temp = this.elements[this.t];
+		this.elements[this.t] = undefined;
+		return temp;
+	}
+}
+
+Stack.prototype.isEmpty = function()
+{
+	return this.top == 0;
+}
 
 // Raw data for some point positions - this will be a square, consisting
 // of two triangles.  We provide two values per vertex for the x and y coordinates
@@ -48,66 +88,114 @@ var vertexbuffer;
 var shader;
 
 
-// code to actually render our geometry
-function draw(angle) {
-	// clear the framebuffer
-	gl.clear(gl.COLOR_BUFFER_BIT);
+var rect1Matrix = new Matrix4().setScale(0.4, 0.15, 1.0);
+var rect2Matrix = new Matrix4().setScale(0.15, 0.4, 1.0);
+var squareMatrix = new Matrix4().setScale(0.15, 0.15, 1.0);
 
-	// bind the shader
+function drawRect(matrixStack, localTransform) {
 	gl.useProgram(shader);
-
-	// bind the buffer
 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexbuffer);
 
-	// get the index for the a_Position attribute defined in the vertex shader
 	var positionIndex = gl.getAttribLocation(shader, 'a_Position');
 	if (positionIndex < 0) {
 		console.log('Failed to get the storage location of a_Position');
 		return;
 	}
-
-	// "enable" the a_position attribute 
 	gl.enableVertexAttribArray(positionIndex);
-
-	// associate the data in the currently bound buffer with the a_position attribute
-	// (The '2' specifies there are 2 floats per vertex in the buffer.  Don't worry about
-	// the last three args just yet.)
 	gl.vertexAttribPointer(positionIndex, 2, gl.FLOAT, false, 0, 0);
 
-	// we can unbind the buffer now (not really necessary when there is only one buffer)
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	var transform = new Matrix4(matrixStack.top()).multiply(localTransform);
 
-	// set the value of the uniform variable in the shader and draw
 	var transformLoc = gl.getUniformLocation(shader, "transform");
-	
-	var greatCircleRads = angle / 180 * Math.PI;
-	var rotationAngle = -2 * angle;
-	
-	var greatCircleX = 0.75 * Math.cos(greatCircleRads);
-	var greatCircleY = 0.75 * Math.sin(greatCircleRads);
-	
-	var modelMatrix1 = new Matrix4()
-		.translate(greatCircleX, greatCircleY, 0)
-		.rotate(rotationAngle, 0, 0, 1)
-		.scale(0.4, 0.15, 1.0);
-	
-	var modelMatrix2 = new Matrix4()
-		.translate(greatCircleX, greatCircleY, 0)
-		.rotate(rotationAngle, 0, 0, 1)
-		.scale(0.15, 0.4, 1.0);
-	
-	gl.uniformMatrix4fv(transformLoc, false, modelMatrix1.elements);
-	gl.drawArrays(gl.TRIANGLES, 0, numPoints);
-	
-	gl.uniformMatrix4fv(transformLoc, false, modelMatrix2.elements);
-	gl.drawArrays(gl.TRIANGLES, 0, numPoints);
+	gl.uniformMatrix4fv(transformLoc, false, transform.elements);
 
-	// unbind shader and "disable" the attribute indices
-	// (not really necessary when there is only one shader)
+	gl.drawArrays(gl.TRIANGLES, false, numPoints);
+
 	gl.disableVertexAttribArray(positionIndex);
 	gl.useProgram(null);
-
 }
+
+function draw(angle) {
+	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	var x = 0.75 * Math.cos(angle/180*Math.PI);
+	var y = 0.75 * Math.sin(angle/180*Math.PI);
+
+	var s = new Stack();
+
+	var orbitMatrix = new Matrix4().translate(x, y, 0).rotate(-2*angle, 0, 0, 1);
+	var squareOffsetMatrix = new Matrix4().translate(0, 0.4, 0);
+
+	s.push(orbitMatrix);
+		drawRect(s, rect1Matrix);
+		drawRect(s, rect2Matrix);
+		s.push(new Matrix4(s.top()).multiply(squareOffsetMatrix));
+			drawRect(s, squareMatrix);
+		s.pop();
+	s.pop();
+}
+
+
+// // code to actually render our geometry
+// function draw(angle) {
+// 	// clear the framebuffer
+// 	gl.clear(gl.COLOR_BUFFER_BIT);
+
+// 	// bind the shader
+// 	gl.useProgram(shader);
+
+// 	// bind the buffer
+// 	gl.bindBuffer(gl.ARRAY_BUFFER, vertexbuffer);
+
+// 	// get the index for the a_Position attribute defined in the vertex shader
+// 	var positionIndex = gl.getAttribLocation(shader, 'a_Position');
+// 	if (positionIndex < 0) {
+// 		console.log('Failed to get the storage location of a_Position');
+// 		return;
+// 	}
+
+// 	// "enable" the a_position attribute 
+// 	gl.enableVertexAttribArray(positionIndex);
+
+// 	// associate the data in the currently bound buffer with the a_position attribute
+// 	// (The '2' specifies there are 2 floats per vertex in the buffer.  Don't worry about
+// 	// the last three args just yet.)
+// 	gl.vertexAttribPointer(positionIndex, 2, gl.FLOAT, false, 0, 0);
+
+// 	// we can unbind the buffer now (not really necessary when there is only one buffer)
+// 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+// 	// set the value of the uniform variable in the shader and draw
+// 	var transformLoc = gl.getUniformLocation(shader, "transform");
+	
+// 	var greatCircleRads = angle / 180 * Math.PI;
+// 	var rotationAngle = -2 * angle;
+	
+// 	var greatCircleX = 0.75 * Math.cos(greatCircleRads);
+// 	var greatCircleY = 0.75 * Math.sin(greatCircleRads);
+	
+// 	var modelMatrix1 = new Matrix4()
+// 		.translate(greatCircleX, greatCircleY, 0)
+// 		.rotate(rotationAngle, 0, 0, 1)
+// 		.scale(0.4, 0.15, 1.0);
+	
+// 	var modelMatrix2 = new Matrix4()
+// 		.translate(greatCircleX, greatCircleY, 0)
+// 		.rotate(rotationAngle, 0, 0, 1)
+// 		.scale(0.15, 0.4, 1.0);
+	
+// 	gl.uniformMatrix4fv(transformLoc, false, modelMatrix1.elements);
+// 	gl.drawArrays(gl.TRIANGLES, 0, numPoints);
+	
+// 	gl.uniformMatrix4fv(transformLoc, false, modelMatrix2.elements);
+// 	gl.drawArrays(gl.TRIANGLES, 0, numPoints);
+
+// 	// unbind shader and "disable" the attribute indices
+// 	// (not really necessary when there is only one shader)
+// 	gl.disableVertexAttribArray(positionIndex);
+// 	gl.useProgram(null);
+
+// }
 
 // entry point when page is loaded
 function main() {
@@ -161,8 +249,6 @@ function main() {
 	// specify a fill color for clearing the framebuffer
 	gl.clearColor(0.0, 0.8, 0.8, 1.0);
 
-	// set up an animation loop in which the scale grows to 1.5 and shrinks
-	// to 0.5, incrementing by 0.05 each frame
 	var angle = 0;
 	var increment = 1;
 	var animate = function () {

@@ -12,14 +12,15 @@
 attribute vec4 a_Position;
 attribute vec4 a_Color;
 varying vec4 color;
+uniform float u_x_offset;
 void main() 
 {
   color = a_Color;
-  gl_Position = a_Position;
+  gl_Position = a_Position + vec4(u_x_offset, 0.0, 0.0, 0.0);
 }
 </script>
 
-<script id="fragmentShader" type="x-shader/x-fragment">
+<script id="varyingFragmentShader" type="x-shader/x-fragment">
 // In a webgl fragment shader, float precision has to be specified before
 // any other variable declarations (in this case, "medium" precision)
 precision mediump float;
@@ -30,9 +31,21 @@ void main()
 }
 </script>
 
+<script id="solidColorFragmentShader" type="x-shader/x-fragment">
+precision mediump float;
+uniform vec4 u_Color;
+void main()
+{
+	gl_FragColor = u_Color;
+}
+</script>
+
 	<canvas id="theCanvas" width="400" height="400">
     Please use a browser that supports "canvas"
     </canvas>
+	<div id="coords">
+		
+	</div>
 
 		<script src="libs/webgl-utils.js"></script>
 		<script src="libs/webgl-debug.js"></script>

@@ -187,10 +187,6 @@ function handleKeyPress(event)
 	var ch = getChar(event);
 	switch(ch)
 	{
-	case ' ':
-		event.preventDefault();
-		paused = !paused;
-		break;
 	case 'x':
 		pitch += 5;
 		break;

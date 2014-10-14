@@ -167,9 +167,9 @@ Camera.prototype.moveDown = function(distance)
 Camera.prototype.turnLeft = function(degrees)
 {
   var rotMatrix = new Matrix4().setRotate(degrees, 0, 1, 0);
-  this.right = rotMatrix.multiplyVector3(this.right).normalize();
-  this.up = rotMatrix.multiplyVector3(this.up).normalize();
-  this.back = rotMatrix.multiplyVector3(this.back).normalize();
+  this.right = rotMatrix.multiplyVector3(this.right);
+  this.up = rotMatrix.multiplyVector3(this.up);
+  this.back = rotMatrix.multiplyVector3(this.back);
 
   this.viewStale = true;
 }
@@ -190,8 +190,8 @@ Camera.prototype.lookUp = function(degrees)
 {
   var right = this.right.elements;
   var rotMatrix = new Matrix4().setRotate(degrees, right[0], right[1], right[2]);
-  this.right = rotMatrix.multiplyVector3(this.right).normalize();
-  this.up = rotMatrix.multiplyVector3(this.up).normalize();
+  this.right = rotMatrix.multiplyVector3(this.right);
+  this.up = rotMatrix.multiplyVector3(this.up);
   this.back = rotMatrix.multiplyVector3(this.back);
 }
 
@@ -259,7 +259,40 @@ Camera.prototype.orbitLeft = function(degrees, distance)
  */
 Camera.prototype.lookAt = function(x, y, z)
 {
-  // TODO
+  var curPos = this.position.elements;
+
+  fx = x - curPos[0];
+  fy = y - curPos[1];
+  fz = z - curPos[2];
+
+  // Normalize f.
+  rlf = 1 / Math.sqrt(fx*fx + fy*fy + fz*fz);
+  fx *= rlf;
+  fy *= rlf;
+  fz *= rlf;
+
+  var up = this.up.elements;
+  // Calculate cross product of f and up.
+  sx = fy * up[2] - fz * up[1];
+  sy = fz * up[0] - fx * up[2];
+  sz = fx * up[1] - fy * up[0];
+
+  // Normalize s.
+  rls = 1 / Math.sqrt(sx*sx + sy*sy + sz*sz);
+  sx *= rls;
+  sy *= rls;
+  sz *= rls;
+
+  // Calculate cross product of s and f.
+  ux = sy * fz - sz * fy;
+  uy = sz * fx - sx * fz;
+  uz = sx * fy - sy * fx;
+
+  this.right.elements = [sx, sy, sz];
+  this.up.elements = [ux, uy, uz];
+  this.back.elements = [-fx, -fy, -fz];
+
+  this.viewStale = true;
 }
 
 /**
@@ -295,6 +328,7 @@ Camera.prototype.recalculateView = function()
              0,        0,          0, 1]
   var rotMatrix = new Matrix4();
   rotMatrix.elements = new Float32Array(rot);
+  rotMatrix.transpose();
 
   var curPos = this.position.elements;
   var transMatrix = new Matrix4().setTranslate(curPos[0], curPos[1], curPos[2]);

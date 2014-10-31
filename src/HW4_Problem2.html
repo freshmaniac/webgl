@@ -1,0 +1,182 @@
+<!-- Same as Lighting3.html but has multiple lights, using
+arrays of uniform and varying variables.
+
+The javascript is dependent on three.js as well as on the teal book utilities,
+see below.
+-->		
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Multiple lights</title>
+</head>
+
+<body> 
+	<canvas id="theCanvas" width="600" height="400">
+    Please use a browser that supports "canvas"
+    </canvas>
+
+<p>
+Keyboard controls:</p>
+<ul style="list-style:none;">
+  <li>x/X - rotate about x axis</li>
+  <li>y/Y - rotate about y axis</li>
+  <li>z/Z - rotate about z axis</li>
+  <li>o - Reset to initial state</li>
+</ul>
+
+<p>Spotlight control:</p>
+<form id="lights">
+  <input id="l0" type="radio" name="spotlight" value="green" onchange="setColorControl()">Green</input>
+  <input id="l1" type="radio" name="spotlight" value="red" onchange="setColorControl()">Red</input>
+  <input id="l2" type="radio" name="spotlight" value="blue" onchange="setColorControl()">Blue</input>
+</form>
+
+<script id="vertexLightingShader" type="x-shader/x-vertex">
+
+// array size and loop bound have to be constant
+#define MAX_LIGHTS 3
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform mat3 normalMatrix;
+
+// position for each light
+uniform vec4 lightPosition[MAX_LIGHTS];
+
+attribute vec4 a_Position;
+attribute vec3 a_Normal;
+
+// we'll have an L vector pointing to each light
+varying vec3 fL[MAX_LIGHTS];
+varying vec3 fN;
+varying vec3 fV;
+
+void main() 
+{
+  // convert position to eye coords
+  vec4 positionEye = view * model * a_Position;
+
+  // vector to light, computed once per light
+  for (int i = 0; i < MAX_LIGHTS; ++i)
+  {
+    // convert light position to eye coords
+    vec4 lightEye = view * lightPosition[i];
+    fL[i] = (lightEye - positionEye).xyz;
+  }
+
+  // transform normal matrix into eye coords
+  fN = normalMatrix * a_Normal;
+
+  // vector from vertex position toward view point
+  fV = normalize(-(positionEye).xyz);
+
+  gl_Position = projection * view * model * a_Position;
+}</script>
+
+<script id="fragmentLightingShader" type="x-shader/x-fragment">
+#define MAX_LIGHTS 3
+
+precision mediump float;
+
+uniform mat4 view;
+uniform mat3 materialProperties;
+uniform mat3 lightProperties[MAX_LIGHTS];
+uniform vec4 lightDirection[MAX_LIGHTS];
+uniform mat4 lightRotation[MAX_LIGHTS];
+uniform float lightIntensity[MAX_LIGHTS];
+uniform float shininess;
+
+varying vec3 fL[MAX_LIGHTS];
+varying vec3 fN;
+varying vec3 fV;
+
+// helper method does lighting calculation for one light
+// and returns the resulting color
+vec4 getLightContribution(vec3 fL, mat3 lightProp, float lightIntensity, vec3 N, vec3 V, vec3 D)
+{
+  vec3 L = normalize(fL);
+
+  // reflected vector
+  vec3 R = reflect(-L, N);
+
+  mat3 products = matrixCompMult(lightProp, materialProperties);
+  vec4 ambientColor = vec4(products[0], 1.0);
+  vec4 diffuseColor = vec4(products[1], 1.0);
+  vec4 specularColor = vec4(products[2], 1.0);
+
+  // Lambert's law, clamp negative values to zero
+  float diffuseFactor = max(0.0, dot(L, N));
+
+  // specular factor from Phong reflection model
+  float specularFactor = pow(max(0.0, dot(V, R)), shininess);
+
+  float spotlightFactor = pow(max(0.0, dot(-D, L)), lightIntensity);
+
+  // add the components together
+  vec4 ret = (specularColor * specularFactor + diffuseColor * diffuseFactor + ambientColor) * spotlightFactor;
+
+  return ret;
+}
+
+void main() 
+{
+  // normalize after interpolating
+  vec3 N = normalize(fN);
+  vec3 V = normalize(fV);
+
+  // add in the contribution from each light
+  vec4 sum = vec4(0.0, 0.0, 0.0, 0.0);
+  for (int i = 0; i < MAX_LIGHTS; ++i)
+  {
+    vec3 D = normalize(view * lightRotation[i] * lightDirection[i]).xyz;
+    float lightIntensity = lightIntensity[i];
+    sum += getLightContribution(fL[i], lightProperties[i], lightIntensity, N, V, D);
+  }
+
+  // usually need to rescale somehow after adding
+  gl_FragColor = sum / float(MAX_LIGHTS);
+  gl_FragColor.a = 1.0;
+}
+</script>
+
+<script id="vertexColorShader" type="x-shader/x-vertex">
+uniform mat4 transform;
+attribute vec4 a_Position;
+attribute vec4 a_Color;
+varying vec4 color;
+void main() 
+{
+  color = a_Color;
+  gl_Position = transform * a_Position;
+}
+</script>
+
+<script id="fragmentColorShader" type="x-shader/x-fragment">
+precision mediump float;
+varying vec4 color;
+void main() 
+{
+  gl_FragColor = color;
+}
+</script>
+
+
+
+		<script src="http://www.cs.iastate.edu/~smkautz/cs336f14/examples/teal_book/webgl-utils.js"></script>
+		<script src="http://www.cs.iastate.edu/~smkautz/cs336f14/examples/teal_book/webgl-debug.js"></script>
+		<script src="http://www.cs.iastate.edu/~smkautz/cs336f14/examples/teal_book/cuon-utils.js"></script>
+		<script src="http://www.cs.iastate.edu/~smkautz/cs336f14/examples/teal_book/cuon-matrix.js"></script>
+		
+		<!-- Use three.js if you have it locally, for easier debugging -->
+		<!--  script src="../../lib/three.js"></script -->
+		
+		<!--  otherwise, load the minified version from the www -->
+		<script src="http://threejs.org/build/three.min.js"></script>
+		
+		<script src="js/HW4_P2b.js"></script>
+		<script>window.onload = main</script>
+</body>
+</html>

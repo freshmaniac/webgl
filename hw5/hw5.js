@@ -13,9 +13,9 @@ var imageNames = [
                   path + "nz.jpg"
                   ];
 
-var axis = 'z';
-var paused = false;
 var camera;
+var cubeAngle = 0;
+var cubeRotation = 0;
 
 //translate keypress events to strings
 //from http://javascript.info/tutorial/keyboard-events
@@ -131,9 +131,9 @@ function start()
 
   var scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera( 45, 1.5, 0.1, 1000 );
-  camera.position.x = 0;
-  camera.position.y = 0;
-  camera.position.z = 0;
+  camera.position.x = -1.2;
+  camera.position.y = 0.5;
+  camera.position.z = 1.2;
   camera.lookAt(new THREE.Vector3(0, 0, 0));
   
   var ourCanvas = document.getElementById('theCanvas');
@@ -159,28 +159,73 @@ function start()
   //var geometry = new THREE.SphereGeometry(1);
 
   // Create a mesh for the object, using the cube shader as the material
-  var cube = new THREE.Mesh( geometry, material );
-  cube.scale.set(10, 10, 10);
+  var skybox = new THREE.Mesh( geometry, material );
+  skybox.scale.set(10, 10, 10);
   
   // Add it to the scene
-  scene.add( cube );
+  scene.add( skybox );
 
-  geometry = new THREE.PlaneBufferGeometry(1, 1, 1, 1);
+  geometry = new THREE.PlaneBufferGeometry(1, 1, 10, 10);
   material = new THREE.MeshLambertMaterial({color: 0xd7bc27, ambient: 0xd7bc27, side: THREE.DoubleSide});
   var plane = new THREE.Mesh( geometry, material );
   plane.rotateOnAxis(new THREE.Vector3(1, 0, 0), Math.PI/2);
-  plane.translateOnAxis(new THREE.Vector3(0, 0, 1), 0.2);
+  plane.position.set(0, -0.2, 0);
 
   scene.add(plane);
 
-  var sunLight = new THREE.PointLight(0xffffff, 3, 100);
-  sunLight.position = new THREE.Vector3(10, 0, 2);
+  var sunLight = new THREE.PointLight(0xffffff, 3, 20);
+  sunLight.position.set(5, 2, 2);
 
   scene.add(sunLight);
 
+  // Add a palm tree to the scene, not sure why textures don't work
+  var onProgress = function(xhr) {};
+  var onError = function(xhr) {};
+  var loader = new THREE.OBJMTLLoader();
+  loader.load('./Palm_Tree/Palm_Tree.obj', './Palm_Tree/Palm_Tree.mtl', function(obj){
+    var a = 0.005;
+    obj.scale.set(a, a, a);
+    obj.position.set(0, -0.2, 0);
+    obj.rotateOnAxis(new THREE.Vector3(1, 0, 0), -Math.PI/2);
+    scene.add(obj);
+  }, onProgress, onError);
+
+  // Add a rolling cube around the tree
+  material = new THREE.MeshLambertMaterial({
+    map: THREE.ImageUtils.loadTexture('images/check64.png')
+  });
+  var spinningCube = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), material);
+  spinningCube.scale.set(0.1, 0.1, 0.1);
+  spinningCube.position.set(-0.2, -0.15, 0);
+  scene.add(spinningCube);
+
+  var sphere = new THREE.Mesh(new THREE.SphereGeometry(0.5), material);
+  sphere.position.set(0, 1, 0);
+  spinningCube.add(sphere);
+
+  var sphere2 = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshPhongMaterial());
+  sphere2.scale.set(0.1, 0.1, 0.1);
+  sphere2.position.set(0.3, -0.15, 0.3);
+  scene.add(sphere2);
+
+  var sphere3 = new THREE.Mesh(new THREE.SphereGeometry(0.5), new THREE.MeshPhongMaterial());
+  sphere3.scale.set(0.1, 0.1, 0.1);
+  sphere3.position.set(0.3, -0.15, -0.2);
+  scene.add(sphere3);
+
+
+  var spotLight = new THREE.SpotLight(0x00ff00);
+  spotLight.position.set(0, 0.8, 0);
+  scene.add(spotLight);
+
+
+
+
   var render = function () {
+    spinningCube.rotateOnAxis(new THREE.Vector3(0, 1, 0), Math.PI / 45);
+
     requestAnimationFrame( render );
-     renderer.render(scene, camera);
+    renderer.render(scene, camera);
   };
 
   render();

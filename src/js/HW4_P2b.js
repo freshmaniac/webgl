@@ -272,19 +272,19 @@ function rotateLightDirection(color, rotMatrix)
   switch(color)
   {
     case 'green':
-      rotateLight0.multiply(rotMatrix);
+      rotateLight0 = rotMatrix.multiply(rotateLight0);
       break;
 
     case 'red':
-      rotateLight1.multiply(rotMatrix);
+      rotateLight1 = rotMatrix.multiply(rotateLight1);
       break;
 
     case 'blue':
-      rotateLight2.multiply(rotMatrix);
+      rotateLight2 = rotMatrix.multiply(rotateLight2);
       break;
 
     default:
-      rotateLight0.multiply(rotMatrix);
+      rotateLight0 = rotMatrix.multiply(rotateLight0);
       break;
   }
 }

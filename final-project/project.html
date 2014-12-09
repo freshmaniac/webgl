@@ -1,0 +1,28 @@
+<html>
+<head>
+    <title>Deforming some solids</title>
+</head>
+<body>
+
+<canvas id="theCanvas" width="600" height="400">
+    Please use a browser that supports "canvas"
+</canvas>
+
+<p>
+    Keyboard controls:
+    <ul style="list-style:none;">
+        <li>w, a, s, d, r, f - Camera controls (translation)
+        <li>I, J, K, L - Camera controls (rotation)
+        <li>W - decrease fov
+        <li>S - increase fov
+    </ul>
+</p>
+
+
+<script src="http://threejs.org/build/three.js"></script>
+<script src="DeformationBox.js"></script>
+
+<script src="project.js"></script>
+<script>window.onload = start</script>
+</body>
+</html>

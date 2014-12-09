@@ -178,6 +178,21 @@ DeformationBox.prototype.setControl = function(i, j, k, v) {
 	this.geometryNeedsUpdate = true;
 };
 
+DeformationBox.prototype.deformRandom = function() {
+	var i = Math.floor(Math.random() * 5);
+	var j = Math.floor(Math.random() * 5);
+	var k = Math.floor(Math.random() * 5);
+
+	var vec = new THREE.Vector3(2, 0, 0);
+	var angle = new THREE.Euler();
+	angle.x = Math.floor(Math.random() * 181 - 90);
+	angle.y = Math.floor(Math.random() * 181 - 90);
+	angle.z = Math.floor(Math.random() * 181 - 90);
+	var transform = new THREE.Matrix4().makeRotationFromEuler(angle);
+
+	this.setControl(i, j, k, vec.applyProjection(transform));
+};
+
 DeformationBox.prototype.stretchX = function(scale) {
 	var ctr = new THREE.Vector3().addVectors(this.min, this.max).multiplyScalar(0.5);
 	var negCtr = ctr.clone().negate();

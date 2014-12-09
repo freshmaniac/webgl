@@ -108,6 +108,16 @@ function handleKeyPress(event)
     if (cameraControl(camera, ch)) return;
 }
 
+function random()
+{
+    box.deformRandom();
+}
+
+function reset()
+{
+    box.reset();
+}
+
 var box;
 
 function start()
